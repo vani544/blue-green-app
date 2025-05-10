@@ -1,0 +1,113 @@
+/* Green Theme */
+:root {
+    --green-primary: #15803d;
+    --green-secondary: #86efac;
+    --green-accent: #22c55e;
+    --green-light: #dcfce7;
+    --green-dark: #166534;
+}
+
+.green-theme {
+    --theme-primary: var(--green-primary);
+    --theme-secondary: var(--green-secondary);
+    --theme-accent: var(--green-accent);
+    --theme-light: var(--green-light);
+    --theme-dark: var(--green-dark);
+}
+
+.environment-indicator.green {
+    background-color: var(--green-primary);
+}
+
+/* Header */
+.green-theme header {
+    background-color: var(--green-dark);
+}
+
+.green-theme .logo {
+    color: var(--color-white);
+}
+
+.green-theme .logo .highlight {
+    color: var(--green-secondary);
+}
+
+.green-theme .nav-links a {
+    color: var(--color-white);
+}
+
+.green-theme .nav-links a:after {
+    background-color: var(--green-secondary);
+}
+
+/* Hero */
+.green-theme .hero {
+    background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-primary) 100%);
+    color: var(--color-white);
+}
+
+.green-theme .highlight {
+    color: var(--green-secondary);
+}
+
+.green-theme .btn.primary {
+    background-color: var(--green-accent);
+    color: var(--color-white);
+}
+
+.green-theme .btn.primary:hover {
+    background-color: #16a34a;
+}
+
+.green-theme .btn.secondary {
+    background-color: transparent;
+    border: 2px solid var(--green-secondary);
+    color: var(--green-secondary);
+}
+
+.green-theme .btn.secondary:hover {
+    background-color: rgba(134, 239, 172, 0.1);
+}
+
+/* Server visual */
+.green-theme .server.green {
+    background: linear-gradient(to bottom, var(--green-primary), var(--green-dark));
+    border: 2px solid var(--green-secondary);
+}
+
+/* Features */
+.green-theme .card-icon.ci-cd,
+.green-theme .card-icon.containers,
+.green-theme .card-icon.kubernetes,
+.green-theme .card-icon.blue-green {
+    background-color: var(--green-light);
+    color: var(--green-primary);
+}
+
+.green-theme .card:hover {
+    border-left: 4px solid var(--green-primary);
+}
+
+/* Deployment Info */
+.green-theme .info-card {
+    border-top: 4px solid var(--green-primary);
+}
+
+.green-theme .info-card .highlight {
+    color: var(--green-primary);
+}
+
+/* Social Links */
+.green-theme .social-icon.linkedin {
+    background-color: var(--green-primary);
+}
+
+.green-theme .social-icon.github,
+.green-theme .social-icon.twitter {
+    background-color: var(--green-accent);
+}
+
+/* Footer */
+.green-theme footer {
+    background-color: var(--green-dark);
+}

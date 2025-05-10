@@ -1,0 +1,97 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(name: 'DEPLOY_ENV', choices: ['blue', 'green'], description: 'Select deployment environment')
+    }
+
+    environment {
+        DOCKER_HUB_CREDS = credentials('docker-creds')
+        AWS_CREDS = credentials('aws-eks-creds')
+        DOCKER_IMAGE = "kastrov/blue-green-demo:${params.DEPLOY_ENV}-${BUILD_NUMBER}"
+        EKS_CLUSTER = "kastro-eks"
+        AWS_REGION = "us-east-1"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "Checking out code..."
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo "Building Docker image for ${params.DEPLOY_ENV} environment..."
+                sh """
+                docker build \
+                    --build-arg DEPLOY_ENV=${params.DEPLOY_ENV} \
+                    -t ${DOCKER_IMAGE} .
+                """
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                echo "Pushing Docker image to Docker Hub..."
+                sh """
+                echo ${DOCKER_HUB_CREDS_PSW} | docker login -u ${DOCKER_HUB_CREDS_USR} --password-stdin
+                docker push ${DOCKER_IMAGE}
+                """
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                echo "Deploying to ${params.DEPLOY_ENV} environment in EKS cluster..."
+                
+                // Configure AWS and kubectl
+                withAWS(credentials: 'aws-eks-creds', region: "${AWS_REGION}") {
+                    sh """
+                    # Update kubeconfig
+                    aws eks update-kubeconfig --name ${EKS_CLUSTER} --region ${AWS_REGION}
+                    
+                    # Update the Kubernetes deployment manifest
+                    cat k8s/${params.DEPLOY_ENV}-deployment.yaml | sed "s|IMAGE_PLACEHOLDER|${DOCKER_IMAGE}|g" > k8s/${params.DEPLOY_ENV}-deployment-updated.yaml
+                    
+                    # Apply the Kubernetes deployment
+                    kubectl apply -f k8s/${params.DEPLOY_ENV}-deployment-updated.yaml
+                    kubectl apply -f k8s/service.yaml
+                    
+                    # Wait for deployment to roll out
+                    kubectl rollout status deployment/${params.DEPLOY_ENV}-deployment
+                    """
+                }
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                echo "Verifying deployment..."
+                withAWS(credentials: 'aws-eks-creds', region: "${AWS_REGION}") {
+                    sh """
+                    # Check pods status
+                    kubectl get pods -l app=${params.DEPLOY_ENV}-app
+                    
+                    # Get service info
+                    kubectl get svc blue-green-service
+                    """
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo "Deployment successful! The ${params.DEPLOY_ENV} environment is now active."
+        }
+        failure {
+            echo "Deployment failed. Check the logs for details."
+        }
+        always {
+            // Clean up local Docker images
+            sh "docker rmi ${DOCKER_IMAGE} || true"
+        }
+    }
+}

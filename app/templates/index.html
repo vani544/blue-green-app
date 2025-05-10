@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KASTRO DevOps - {{ environment.upper() }} Environment</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/' + environment + '.css') }}">
+</head>
+<body class="{{ environment }}-theme">
+    <div class="environment-indicator {{ environment }}">
+        <span>{{ environment.upper() }} ENVIRONMENT</span>
+    </div>
+    
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <span>KASTRO</span> <span class="highlight">DevOps</span>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="#" class="active">Home</a></li>
+                    <li><a href="#">Services</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Welcome to <span class="highlight">{{ environment.upper() }}</span> Deployment</h1>
+                <p>This is a demonstration of Blue-Green Deployment using AWS EKS and Jenkins CI/CD pipeline.</p>
+                <div class="buttons">
+                    <a href="#" class="btn primary">Learn More</a>
+                    <a href="#" class="btn secondary">Contact Us</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="deployment-visual">
+                    <div class="server {{ environment }}"></div>
+                    <div class="arrows">
+                        <div class="arrow"></div>
+                        <div class="arrow"></div>
+                        <div class="arrow"></div>
+                    </div>
+                    <div class="user"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="features">
+        <div class="container">
+            <h2>DevOps Features</h2>
+            <div class="feature-cards">
+                <div class="card">
+                    <div class="card-icon ci-cd"></div>
+                    <h3>CI/CD Pipeline</h3>
+                    <p>Automated build, test, and deployment processes using Jenkins.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon containers"></div>
+                    <h3>Containerization</h3>
+                    <p>Docker containers for consistent deployment across environments.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon kubernetes"></div>
+                    <h3>Kubernetes</h3>
+                    <p>Orchestration with AWS EKS for scalable infrastructure.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon blue-green"></div>
+                    <h3>Blue-Green</h3>
+                    <p>Zero-downtime deployments with instant rollback capability.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="deployment-info">
+        <div class="container">
+            <h2>Current Deployment</h2>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>Environment</h3>
+                    <p class="highlight">{{ environment.upper() }}</p>
+                </div>
+                <div class="info-card">
+                    <h3>Hostname</h3>
+                    <p>{{ hostname }}</p>
+                </div>
+                <div class="info-card">
+                    <h3>Deployment Type</h3>
+                    <p>Kubernetes Pod</p>
+                </div>
+                <div class="info-card">
+                    <h3>Port</h3>
+                    <p>5000</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="about">
+        <div class="container">
+            <div class="profile">
+                <div class="profile-image">
+                    <img src="https://media.licdn.com/dms/image/v2/D5603AQHJB_lF1d9OSw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1718971147172?e=1752105600&v=beta&t=VO5jO8GYVs-_UNrKx9gQdrPlM_CuD1VjWqpyD0CZLTs" alt="KASTRO">
+                </div>
+                <div class="profile-content">
+                    <h2>About KASTRO</h2>
+                    <p>DevOps Engineer specializing in CI/CD pipelines, containerization, and cloud infrastructure. Experienced in AWS, Kubernetes, Docker, and Jenkins.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-icon linkedin"></a>
+                        <a href="#" class="social-icon github"></a>
+                        <a href="#" class="social-icon twitter"></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <footer>
+        <div class="container">
+            <p>Designed, Developed & Deployed by <span class="highlight">KASTRO</span></p>
+            <p class="version">{{ environment.upper() }} Version 1.0.0</p>
+        </div>
+    </footer>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

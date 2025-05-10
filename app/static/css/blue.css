@@ -1,0 +1,113 @@
+/* Blue Theme */
+:root {
+    --blue-primary: #1e40af;
+    --blue-secondary: #93c5fd;
+    --blue-accent: #3b82f6;
+    --blue-light: #dbeafe;
+    --blue-dark: #1e3a8a;
+}
+
+.blue-theme {
+    --theme-primary: var(--blue-primary);
+    --theme-secondary: var(--blue-secondary);
+    --theme-accent: var(--blue-accent);
+    --theme-light: var(--blue-light);
+    --theme-dark: var(--blue-dark);
+}
+
+.environment-indicator.blue {
+    background-color: var(--blue-primary);
+}
+
+/* Header */
+.blue-theme header {
+    background-color: var(--blue-dark);
+}
+
+.blue-theme .logo {
+    color: var(--color-white);
+}
+
+.blue-theme .logo .highlight {
+    color: var(--blue-secondary);
+}
+
+.blue-theme .nav-links a {
+    color: var(--color-white);
+}
+
+.blue-theme .nav-links a:after {
+    background-color: var(--blue-secondary);
+}
+
+/* Hero */
+.blue-theme .hero {
+    background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-primary) 100%);
+    color: var(--color-white);
+}
+
+.blue-theme .highlight {
+    color: var(--blue-secondary);
+}
+
+.blue-theme .btn.primary {
+    background-color: var(--blue-accent);
+    color: var(--color-white);
+}
+
+.blue-theme .btn.primary:hover {
+    background-color: #2563eb;
+}
+
+.blue-theme .btn.secondary {
+    background-color: transparent;
+    border: 2px solid var(--blue-secondary);
+    color: var(--blue-secondary);
+}
+
+.blue-theme .btn.secondary:hover {
+    background-color: rgba(147, 197, 253, 0.1);
+}
+
+/* Server visual */
+.blue-theme .server.blue {
+    background: linear-gradient(to bottom, var(--blue-primary), var(--blue-dark));
+    border: 2px solid var(--blue-secondary);
+}
+
+/* Features */
+.blue-theme .card-icon.ci-cd,
+.blue-theme .card-icon.containers,
+.blue-theme .card-icon.kubernetes,
+.blue-theme .card-icon.blue-green {
+    background-color: var(--blue-light);
+    color: var(--blue-primary);
+}
+
+.blue-theme .card:hover {
+    border-left: 4px solid var(--blue-primary);
+}
+
+/* Deployment Info */
+.blue-theme .info-card {
+    border-top: 4px solid var(--blue-primary);
+}
+
+.blue-theme .info-card .highlight {
+    color: var(--blue-primary);
+}
+
+/* Social Links */
+.blue-theme .social-icon.linkedin {
+    background-color: var(--blue-primary);
+}
+
+.blue-theme .social-icon.github,
+.blue-theme .social-icon.twitter {
+    background-color: var(--blue-accent);
+}
+
+/* Footer */
+.blue-theme footer {
+    background-color: var(--blue-dark);
+}
