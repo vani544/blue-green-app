@@ -11,6 +11,8 @@ pipeline {
         EKS_CLUSTER = "kastro-eks"
         K8S_NAMESPACE = "blue-green-demo"
         DOCKER_IMAGE = "kastrov/blue-green-demo:${params.DEPLOY_ENV}-${BUILD_NUMBER}"
+        GUNICORN_TIMEOUT = "120"
+        HEALTH_CHECK_TIMEOUT = "10" // Increased from 5
     }
 
     stages {
@@ -27,6 +29,7 @@ pipeline {
                 sh """
                 docker build \
                     --build-arg DEPLOY_ENV=${params.DEPLOY_ENV} \
+                    --no-cache \
                     -t ${DOCKER_IMAGE} .
                 """
             }
@@ -35,10 +38,14 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 echo 'Pushing Docker image to Docker Hub...'
-                sh """
-                echo ${DOCKER_HUB_CREDS_PSW} | docker login -u ${DOCKER_HUB_CREDS_USR} --password-stdin
-                docker push ${DOCKER_IMAGE}
-                """
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh """
+                        docker login -u ${USERNAME} -p ${PASSWORD}
+                        docker push ${DOCKER_IMAGE}
+                        """
+                    }
+                }
             }
         }
 
@@ -68,40 +75,50 @@ pipeline {
                     try {
                         echo "Deploying to ${params.DEPLOY_ENV} environment in EKS cluster..."
                         sh """
-                        # Update the Kubernetes deployment manifest
+                        # Update the Kubernetes deployment manifest with proper timeouts
                         cat k8s/${params.DEPLOY_ENV}-deployment.yaml | \
-                            sed "s|IMAGE_PLACEHOLDER|${DOCKER_IMAGE}|g" > k8s/${params.DEPLOY_ENV}-deployment-updated.yaml
+                            sed "s|IMAGE_PLACEHOLDER|${DOCKER_IMAGE}|g" | \
+                            sed "s|TIMEOUT_VALUE|${HEALTH_CHECK_TIMEOUT}|g" > k8s/${params.DEPLOY_ENV}-deployment-updated.yaml
                         
                         # Apply the Kubernetes deployment
                         kubectl apply -f k8s/${params.DEPLOY_ENV}-deployment-updated.yaml
                         
-                        # Update service selector if needed
-                        if kubectl get svc blue-green-service >/dev/null 2>&1; then
-                            kubectl patch svc blue-green-service -p '{"spec":{"selector":{"app":"${params.DEPLOY_ENV}-app"}}}'
-                        else
+                        # Update service selector
+                        kubectl patch svc blue-green-service -p '{"spec":{"selector":{"app":"${params.DEPLOY_ENV}-app"}}}' || \
                             kubectl apply -f k8s/service.yaml
-                        fi
                         
-                        # Wait for deployment
-                        kubectl rollout status deployment/${params.DEPLOY_ENV}-deployment --timeout=300s
+                        # Wait for deployment with extended timeout
+                        kubectl rollout status deployment/${params.DEPLOY_ENV}-deployment --timeout=600s
                         
-                        # Verify pods are ready
-                        kubectl wait --for=condition=ready pods -l app=${params.DEPLOY_ENV}-app --timeout=300s
+                        # Verify pods are ready (simplified selector)
+                        kubectl wait --for=condition=ready pods -l app=${params.DEPLOY_ENV}-app --timeout=600s
+                        
+                        # Additional health check verification
+                        kubectl get pods -l app=${params.DEPLOY_ENV}-app -o wide
                         """
                     } catch (err) {
                         echo 'Deployment failed, gathering debug information...'
                         sh """
+                        echo '### Current deployments:'
+                        kubectl get deployments -o wide
+                        
                         echo '### Failed pods:'
                         kubectl get pods -l app=${params.DEPLOY_ENV}-app -o wide
                         
                         echo '### Pod logs:'
-                        kubectl logs -l app=${params.DEPLOY_ENV}-app --all-containers=true --tail=50
+                        kubectl logs -l app=${params.DEPLOY_ENV}-app --all-containers=true --tail=100
                         
                         echo '### Events:'
-                        kubectl get events --sort-by='.metadata.creationTimestamp' | grep -i error || true
+                        kubectl get events --sort-by='.metadata.creationTimestamp' | grep -i -E 'error|fail|timeout' || true
                         
                         echo '### Describe deployment:'
                         kubectl describe deployment ${params.DEPLOY_ENV}-deployment
+                        
+                        echo '### Describe service:'
+                        kubectl describe svc blue-green-service
+                        
+                        echo '### Network diagnostics:'
+                        kubectl get endpoints blue-green-service -o yaml
                         """
                         error("Deployment failed: ${err.getMessage()}")
                     }
@@ -121,6 +138,20 @@ pipeline {
                     echo "Pod status:"
                     sh "kubectl get pods -l app=${params.DEPLOY_ENV}-app -o wide"
                     echo "Load Balancer URL: http://${lbUrl}"
+                    
+                    // Health check with retries
+                    sh """
+                    for i in {1..5}; do
+                        if curl -sSf --max-time 10 http://${lbUrl}/health; then
+                            echo "Health check passed"
+                            exit 0
+                        fi
+                        echo "Health check attempt \$i failed, retrying..."
+                        sleep 10
+                    done
+                    echo "Health check failed after 5 attempts"
+                    exit 1
+                    """
                 }
             }
         }
@@ -132,6 +163,7 @@ pipeline {
                 def lbUrl = sh(script: "kubectl get svc blue-green-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'", returnStdout: true).trim()
                 echo "Deployment successful! The ${params.DEPLOY_ENV} environment is now active."
                 echo "You can access the service at: http://${lbUrl}"
+                echo "Health check endpoint: http://${lbUrl}/health"
             }
         }
         failure {
@@ -140,10 +172,12 @@ pipeline {
             echo '1. Application failing health checks (/health endpoint)'
             echo '2. Insufficient resources in EKS cluster'
             echo '3. Docker image pull issues'
+            echo '4. Health check timeouts (current timeout: ${HEALTH_CHECK_TIMEOUT}s)'
         }
         always {
             sh "docker rmi ${DOCKER_IMAGE} || true"
             archiveArtifacts artifacts: 'k8s/*-updated.yaml', allowEmptyArchive: true
+            cleanWs()
         }
     }
 }
