@@ -38,18 +38,26 @@ pipeline {
         """
       }
     }
-
     stage('Commit & Push to Git') {
-      steps {
-        sh """
-        git config user.email "vani.vanisri28@gmail.com"
-        git config user.name "vani544"
-        git add k8s/
-        git commit -m "Deploy ${DEPLOY_ENV} to ${ENV}"
-        git push origin main
-        """
-      }
+  steps {
+    withCredentials([usernamePassword(
+      credentialsId: 'github-pat',
+      usernameVariable: 'GIT_USER',
+      passwordVariable: 'GIT_TOKEN'
+    )]) {
+      sh """
+      git config user.email "vani.vanisri28@gmail.com"
+      git config user.name "vani544"
+
+      git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/vani544/blue-green-app.git
+
+      git add k8s/
+      git commit -m "Deploy ${DEPLOY_ENV} to ${ENV}" || echo "No changes to commit"
+      git push origin main
+      """
     }
+  }
+}
 
     stage('Trigger Argo CD Sync') {
       steps {
