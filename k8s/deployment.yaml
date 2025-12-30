@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: bg-app
-        image: vani5652/blue-green-demo:initial
+        image: vani5652/blue-green-demo:blue-dev-17
         imagePullPolicy: Always
         ports:
         - containerPort: 5000
