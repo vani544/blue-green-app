@@ -32,7 +32,7 @@ pipeline {
     stage('Update Manifests') {
       steps {
         sh """
-          sed -i "s|IMAGE_PLACEHOLDER|${IMAGE}|g" k8s/deployment.yaml
+          sed -i "s|image:.*|image: ${IMAGE}|g" k8s/deployment.yaml
           sed -i "s|DEPLOY_ENV|${DEPLOY_ENV}|g" k8s/deployment.yaml
           sed -i "s|DEPLOY_ENV|${DEPLOY_ENV}|g" k8s/service.yaml
         """
